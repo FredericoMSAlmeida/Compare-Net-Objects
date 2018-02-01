@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using KellermanSoftware.CompareNetObjects;
 using KellermanSoftware.CompareNetObjectsTests.Attributes;
 using KellermanSoftware.CompareNetObjectsTests.TestClasses;
@@ -15,23 +16,7 @@ namespace KellermanSoftware.CompareNetObjectsTests
 
         #region Setup/Teardown
 
-        /// <summary>
-        /// Code that is run once for a suite of tests
-        /// </summary>
-        [TestFixtureSetUp]
-        public void TestFixtureSetup()
-        {
 
-        }
-
-        /// <summary>
-        /// Code that is run once after a suite of tests has finished executing
-        /// </summary>
-        [TestFixtureTearDown]
-        public void TestFixtureTearDown()
-        {
-
-        }
 
         /// <summary>
         /// Code that is run before each test
@@ -272,6 +257,71 @@ namespace KellermanSoftware.CompareNetObjectsTests
 
             var result = _compare.Compare(p1, p2);
             Assert.IsFalse(result.AreEqual, result.DifferencesString);
+        }
+        #endregion
+
+        #region Case Insensitive Tests
+
+        [Test]
+        public void CaseSensitiveTest()
+        {
+            //Arrange
+            _compare.Config.CaseSensitive = true;
+
+            //Act
+            var result = _compare.Compare("The quick brown fox jumps over the lazy dog.", "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG.");
+
+            //Assert
+            Assert.IsFalse(result.AreEqual, result.DifferencesString);
+        }
+
+        [Test]
+        public void CaseInSensitiveTest()
+        {
+            //Arrange
+            _compare.Config.CaseSensitive = false;
+
+            //Act
+            var result = _compare.Compare("The quick brown fox jumps over the lazy dog.", "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG.");
+
+            //Assert
+            Assert.IsTrue(result.AreEqual, result.DifferencesString);
+        }
+        #endregion
+
+        #region Save and Load Configuration Tests
+
+        [Test]
+        public void SaveConfigurationTest()
+        {
+            //Arrange
+            string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
+
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+
+            //Act
+            _compare.SaveConfiguration(filePath);
+
+            //Assert
+            Assert.IsTrue(File.Exists(filePath));
+        }
+
+        [Test]
+        public void LoadConfigurationTest()
+        {
+            //Arrange
+            string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
+
+            _compare.Config.CaseSensitive = false;
+            _compare.SaveConfiguration(filePath);
+
+            //Act
+            _compare.Config = new ComparisonConfig(); //Wipe out the current config
+            _compare.LoadConfiguration(filePath);
+
+            //Assert
+            Assert.IsFalse(_compare.Config.CaseSensitive);
         }
         #endregion
     }

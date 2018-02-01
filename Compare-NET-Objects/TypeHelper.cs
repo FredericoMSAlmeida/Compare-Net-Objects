@@ -4,10 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Reflection;
-
+using System.Text;
 #if !PORTABLE && !DNCORE
 using System.Data;
 using System.Drawing;
+using System.Dynamic;
 #endif
 
 namespace KellermanSoftware.CompareNetObjects
@@ -17,6 +18,20 @@ namespace KellermanSoftware.CompareNetObjects
     /// </summary>
     public static class TypeHelper
     {
+        /// <summary>
+        /// Returns true if it is a dynamic object
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static bool IsDynamicObject(Type type)
+        {
+#if !PORTABLE && !DNCORE
+            return typeof(IDynamicMetaObjectProvider).IsAssignableFrom(type);
+#else
+            return false;
+#endif
+        }
+
         /// <summary>
         /// Returns true if it is a byte array
         /// </summary>
@@ -282,6 +297,19 @@ namespace KellermanSoftware.CompareNetObjects
         }
 
         /// <summary>
+        /// Return true if the type is a StringBuilder
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static bool IsStringBuilder(Type type)
+        {
+            if (type == null)
+                return false;
+
+            return type == typeof(StringBuilder);
+        }
+
+        /// <summary>
         /// Return true if the type is a string
         /// </summary>
         /// <param name="type"></param>
@@ -409,6 +437,11 @@ namespace KellermanSoftware.CompareNetObjects
             return type == typeof(Font);
         }
 
+        /// <summary>
+        /// Returns true if the Type is Data Column
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public static bool IsDataColumn(Type type)
         {
             if (type == null)

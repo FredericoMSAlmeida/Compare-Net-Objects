@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using KellermanSoftware.CompareNetObjects;
-using KellermanSoftware.CompareNetObjectsTests.TestClasses;
+﻿using KellermanSoftware.CompareNetObjects;
 using NUnit.Framework;
 
 namespace KellermanSoftware.CompareNetObjectsTests
@@ -17,23 +12,7 @@ namespace KellermanSoftware.CompareNetObjectsTests
 
         #region Setup/Teardown
 
-        /// <summary>
-        /// Code that is run once for a suite of tests
-        /// </summary>
-        [TestFixtureSetUp]
-        public void TestFixtureSetup()
-        {
 
-        }
-
-        /// <summary>
-        /// Code that is run once after a suite of tests has finished executing
-        /// </summary>
-        [TestFixtureTearDown]
-        public void TestFixtureTearDown()
-        {
-
-        }
 
         /// <summary>
         /// Code that is run before each test

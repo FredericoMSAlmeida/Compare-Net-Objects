@@ -32,6 +32,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
+
+#if !DNCORE
+using System.Runtime.Serialization.Json;
+#endif
 
 #if !PORTABLE && !DNCORE
 using KellermanSoftware.CompareNetObjects.Properties;
@@ -97,16 +102,16 @@ namespace KellermanSoftware.CompareNetObjects
     /// </example>
     public class CompareLogic : ICompareLogic
     {
-        #region Properties
+#region Properties
 
         /// <summary>
         /// The default configuration
         /// </summary>
         public ComparisonConfig Config { get; set; }
 
-        #endregion
+#endregion
 
-        #region Constructor
+#region Constructor
 
         /// <summary>
         /// Set up defaults for the comparison
@@ -125,7 +130,7 @@ namespace KellermanSoftware.CompareNetObjects
             Config = config;
         }
 
-        #if !PORTABLE && !DNCORE
+#if !PORTABLE && !DNCORE
 
         /// <summary>
         /// Set up defaults for the comparison
@@ -172,9 +177,9 @@ namespace KellermanSoftware.CompareNetObjects
         }
 #endif
 
-        #endregion
+#endregion
 
-        #region Public Methods
+#region Public Methods
         /// <summary>
         /// Compare two objects of the same type to each other.
         /// </summary>
@@ -189,9 +194,9 @@ namespace KellermanSoftware.CompareNetObjects
         {
             ComparisonResult result = new ComparisonResult(Config);
 
-            #if !PORTABLE && !DNCORE
+#if !PORTABLE && !DNCORE
                 result.Watch.Start();
-            #endif
+#endif
 
             RootComparer rootComparer = RootComparerFactory.GetRootComparer();
 
@@ -209,9 +214,9 @@ namespace KellermanSoftware.CompareNetObjects
             if (Config.AutoClearCache)
                 ClearCache();
 
-            #if !PORTABLE && !DNCORE
+#if !PORTABLE && !DNCORE
                 result.Watch.Stop();
-            #endif
+#endif
 
             return result;
         }
@@ -224,7 +229,62 @@ namespace KellermanSoftware.CompareNetObjects
             Cache.ClearCache();
         }
 
-        #endregion
+#if !DNCORE
+        /// <summary>
+        /// Save the current configuration to the passed stream
+        /// </summary>
+        /// <param name="stream"></param>
+        public void SaveConfiguration(Stream stream)
+        {
+            DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(ComparisonConfig));
+            ser.WriteObject(stream, Config);
+
+            if (stream.CanSeek && stream.Position > 0)
+                stream.Seek(0, SeekOrigin.Begin);
+        }
+
+        /// <summary>
+        /// Load the current configuration from a json stream
+        /// </summary>
+        /// <param name="stream"></param>
+        public void LoadConfiguration(Stream stream)
+        {
+            if (stream.CanSeek && stream.Position > 0)
+                stream.Seek(0, SeekOrigin.Begin);
+
+            DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(ComparisonConfig));
+            Config = (ComparisonConfig)ser.ReadObject(stream);
+        }
+#endif
+
+#if !PORTABLE && !DNCORE
+        /// <summary>
+        /// Load the current configuration from a json stream
+        /// </summary>
+        /// <param name="filePath"></param>
+        public void LoadConfiguration(string filePath)
+        {
+            using (FileStream stream = new FileStream(filePath, FileMode.Open))
+            {
+                DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(ComparisonConfig));
+                Config = (ComparisonConfig)ser.ReadObject(stream);
+            }
+        }
+
+        /// <summary>
+        /// Save the current configuration to a json file
+        /// </summary>
+        /// <param name="filePath"></param>
+        public void SaveConfiguration(string filePath)
+        {
+            using (FileStream stream = new FileStream(filePath, FileMode.Create))
+            {
+                DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(ComparisonConfig));
+                ser.WriteObject(stream, Config);
+            }
+        }
+#endif
+#endregion
 
     }
 }

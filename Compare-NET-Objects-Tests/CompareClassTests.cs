@@ -16,23 +16,7 @@ namespace KellermanSoftware.CompareNetObjectsTests
 
         #region Setup/Teardown
 
-        /// <summary>
-        /// Code that is run once for a suite of tests
-        /// </summary>
-        [TestFixtureSetUp]
-        public void TestFixtureSetup()
-        {
 
-        }
-
-        /// <summary>
-        /// Code that is run once after a suite of tests has finished executing
-        /// </summary>
-        [TestFixtureTearDown]
-        public void TestFixtureTearDown()
-        {
-
-        }
 
         /// <summary>
         /// Code that is run before each test
@@ -87,8 +71,9 @@ namespace KellermanSoftware.CompareNetObjectsTests
 
         #endregion
 
+        #region Deep Tests
         [Test]
-        public void DeepEqual()
+        public void DeepNotEqual()
         {
             var people1 = new List<Person>() { new Person() { Name = "Joe" } };
             var people2 = new List<Person>() { new Person() { Name = "Sue" } };
@@ -99,7 +84,7 @@ namespace KellermanSoftware.CompareNetObjectsTests
         }
 
         [Test]
-        public void DeepNotEqual()
+        public void DeepEqual()
         {
             var people1 = new List<Person>() { new Person() { Name = "Joe" } };
             var people2 = new List<Person>() { new Person() { Name = "Joe" } };
@@ -108,6 +93,8 @@ namespace KellermanSoftware.CompareNetObjectsTests
             var result = _compare.Compare(group1, group2);
             Assert.IsTrue(result.AreEqual);
         }
+
+        #endregion
 
         #region Shallow Tests
         [Test]

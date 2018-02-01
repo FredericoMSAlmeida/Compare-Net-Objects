@@ -61,7 +61,7 @@ namespace KellermanSoftware.CompareNetObjects.IgnoreOrderTypes
         {
             IEnumerator enumerator1 = ((IEnumerable) parms.Object1).GetEnumerator();
             IEnumerator enumerator2 = ((IEnumerable) parms.Object2).GetEnumerator();
-            List<string> matchingSpec = null;
+            List<string> matchingSpec;
 
             while (enumerator1.MoveNext())
             {
@@ -70,8 +70,14 @@ namespace KellermanSoftware.CompareNetObjects.IgnoreOrderTypes
                     return false;
                 }
 
-                if (matchingSpec == null)
-                    matchingSpec = GetMatchingSpec(parms.Result, enumerator1.Current.GetType());
+                Type enumerator1Type = enumerator1.Current.GetType();
+
+                if (parms.Config.ClassTypesToIgnore.Contains(enumerator1Type))
+                {
+                    return false;
+                }
+
+                matchingSpec = GetMatchingSpec(parms.Result, enumerator1Type);
 
                 string matchIndex1 = GetMatchIndex(parms.Result, matchingSpec, enumerator1.Current);
 
@@ -87,6 +93,14 @@ namespace KellermanSoftware.CompareNetObjects.IgnoreOrderTypes
                         return false;
                     }
 
+                    Type enumerator2Type = enumerator2.Current.GetType();
+
+                    if (parms.Config.ClassTypesToIgnore.Contains(enumerator2Type))
+                    {
+                        return false;
+                    }
+
+                    matchingSpec = GetMatchingSpec(parms.Result, enumerator2Type);
                     string matchIndex2 = GetMatchIndex(parms.Result, matchingSpec, enumerator2.Current);
 
                     if (matchIndex1 == matchIndex2)
@@ -124,7 +138,7 @@ namespace KellermanSoftware.CompareNetObjects.IgnoreOrderTypes
             bool reverseCompare)
         {
             IEnumerator enumerator1;
-            List<string> matchingSpec = null;
+            List<string> matchingSpec;
 
             if (!reverseCompare)
             {
@@ -142,8 +156,14 @@ namespace KellermanSoftware.CompareNetObjects.IgnoreOrderTypes
                     continue;
                 }
 
-                if (matchingSpec == null)
-                    matchingSpec = GetMatchingSpec(parms.Result, enumerator1.Current.GetType());
+                Type enumerator1Type = enumerator1.Current.GetType();
+
+                if (parms.Config.ClassTypesToIgnore.Contains(enumerator1Type))
+                {
+                    continue;
+                }
+
+                matchingSpec = GetMatchingSpec(parms.Result, enumerator1Type);
 
                 string matchIndex1 = GetMatchIndex(parms.Result, matchingSpec, enumerator1.Current);
 
@@ -171,6 +191,14 @@ namespace KellermanSoftware.CompareNetObjects.IgnoreOrderTypes
                         continue;
                     }
 
+                    Type enumerator2Type = enumerator2.Current.GetType();
+
+                    if (parms.Config.ClassTypesToIgnore.Contains(enumerator2Type))
+                    {
+                        continue;
+                    }
+
+                    matchingSpec = GetMatchingSpec(parms.Result, enumerator2Type);
                     string matchIndex2 = GetMatchIndex(parms.Result, matchingSpec, enumerator2.Current);
 
                     if (matchIndex1 == matchIndex2)
@@ -197,14 +225,14 @@ namespace KellermanSoftware.CompareNetObjects.IgnoreOrderTypes
                 {
                     Difference difference = new Difference
                     {
-                        ParentObject1 = new WeakReference(parms.ParentObject1),
-                        ParentObject2 = new WeakReference(parms.ParentObject2),
+                        ParentObject1 = parms.ParentObject1,
+                        ParentObject2 = parms.ParentObject2,
                         PropertyName = currentBreadCrumb,
                         Object1Value = reverseCompare ? "(null)" : NiceString(enumerator1.Current),
                         Object2Value = reverseCompare ? NiceString(enumerator1.Current) : "(null)",
                         ChildPropertyName = "Item",
-                        Object1 = reverseCompare ? null : new WeakReference(enumerator1),
-                        Object2 = reverseCompare ? new WeakReference(enumerator1) : null
+						Object1 = reverseCompare ? null : enumerator1.Current,
+						Object2 = reverseCompare ? enumerator1.Current : null
                     };
 
                     AddDifference(parms.Result, difference);                    
@@ -287,16 +315,10 @@ namespace KellermanSoftware.CompareNetObjects.IgnoreOrderTypes
         private List<string> GetMatchingSpec(ComparisonResult result,Type type)
         {
             //The user defined a key for the order
-            if (result.Config.CollectionMatchingSpec.Keys.Contains(type))
+            var matchingBasePresent = result.Config.CollectionMatchingSpec.Keys.FirstOrDefault(k => k.IsAssignableFrom(type));
+            if (matchingBasePresent != null)
             {
-                return result.Config.CollectionMatchingSpec.First(p => p.Key == type).Value.ToList();
-            }
-
-            Type[] typeInterfaces = type.GetInterfaces();
-            bool matchingInterfacePresent = result.Config.CollectionMatchingSpec.Keys.Any(k => typeInterfaces.Any(t => t == k));
-            if (matchingInterfacePresent)
-            {
-                return result.Config.CollectionMatchingSpec.First(p => typeInterfaces.Contains(p.Key)).Value.ToList();
+                return result.Config.CollectionMatchingSpec.First(p => p.Key == matchingBasePresent).Value.ToList();
             }
 
             //Make a key out of primative types, date, decimal, string, guid, and enum of the class
